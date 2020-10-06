@@ -31,8 +31,11 @@ spring:
             scope: message.read,message.write
         provider:
           spring:
-            authorization-uri: http://auth-server:9000/oauth2/authorize
-            token-uri: http://auth-server:9000/oauth2/token
+#            authorization-uri: http://auth-server:9000/oauth2/authorize
+#            token-uri: http://auth-server:9000/oauth2/token
+            authorization-uri: http://35.197.103.195:30697/oauth2/authorize
+            token-uri: http://35.197.103.195:30697/oauth2/token
 
 messages:
-  base-uri: http://localhost:8090/messages
+#  base-uri: http://localhost:8090/messages
+  base-uri: http://resource-server-service:8090/messages

@@ -15,6 +15,7 @@
  */
 package sample.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -30,8 +31,12 @@ import org.springframework.security.oauth2.server.authorization.client.InMemoryR
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import sample.ApplicationSettings;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author Joe Grandja
@@ -40,21 +45,36 @@ import java.util.UUID;
 @EnableWebSecurity
 @Import(OAuth2AuthorizationServerConfiguration.class)
 public class AuthorizationServerConfig {
+	private ApplicationSettings applicationSettings;
+
+	@Autowired
+	public void setApplicationSettings(ApplicationSettings applicationSettings) {
+		this.applicationSettings = applicationSettings;
+	}
 
 	// @formatter:off
 	@Bean
 	public RegisteredClientRepository registeredClientRepository() {
-		RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-				.clientId("messaging-client")
-				.clientSecret("secret")
-				.clientAuthenticationMethod(ClientAuthenticationMethod.BASIC)
-				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-				.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-				.redirectUri("http://localhost:8080/authorized")
-				.scope("message.read")
-				.scope("message.write")
-				.build();
-		return new InMemoryRegisteredClientRepository(registeredClient);
+		List<RegisteredClient> registeredClients = applicationSettings.getClients().stream().map(
+				clientConfig -> {
+					return RegisteredClient
+							.withId(UUID.randomUUID().toString())
+							.clientId(clientConfig.getClientId())
+							.clientSecret(clientConfig.getClientSecret())
+							.clientAuthenticationMethod(new ClientAuthenticationMethod(clientConfig.getAuthenticationMethod()))
+							.authorizationGrantTypes(authorizationGrantTypes -> {
+								clientConfig.getGrantTypes()
+										.forEach(it -> authorizationGrantTypes.add(new AuthorizationGrantType(it)));
+							})
+							.redirectUri(clientConfig.getRedirectUri())
+							.scopes(scopes -> {
+								clientConfig.getScopes()
+										.forEach(scopes::add);
+							})
+							.build();
+				}).collect(Collectors.toList());
+
+		return new InMemoryRegisteredClientRepository(registeredClients);
 	}
 	// @formatter:on
 

@@ -17,16 +17,21 @@ package sample;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * @author Joe Grandja
  * @since 0.0.1
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan("sample")
 public class OAuth2AuthorizationServerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(OAuth2AuthorizationServerApplication.class, args);
+
+		new SpringApplicationBuilder(OAuth2AuthorizationServerApplication.class)
+				.initializers(new Oauth2AuthorizationServerInitializer()).run(args);
 	}
 
 }
